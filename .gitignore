@@ -1,0 +1,73 @@
+# ── Python ──────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+*.egg
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# ── UV ──────────────────────────────────────────────────────────────────
+# uv.lock is committed; virtual envs are not
+.python-version
+
+# ── Node / Frontend ──────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.vite/
+.npm/
+
+# ── Terraform ────────────────────────────────────────────────────────────
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfstate.d/
+*.tfplan
+*.tfvars
+# Keep examples committed
+!*.tfvars.example
+
+# ── Environment / Secrets ────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+# Keep examples committed
+!.env.example
+
+# ── AWS ──────────────────────────────────────────────────────────────────
+.aws/credentials
+*.pem
+*.p12
+*.pfx
+
+# ── IDE / OS ─────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Misc ─────────────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+# .secrets.baseline is intentionally committed so detect-secrets can diff against it

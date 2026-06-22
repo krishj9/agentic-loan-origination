@@ -1,0 +1,70 @@
+---
+# Pre-commit hook configuration.
+#
+# Install:
+#   uv run pre-commit install
+#
+# Run manually against all files:
+#   uv run pre-commit run --all-files
+
+repos:
+  # ── General file hygiene ────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ".*\\.md$"
+      - id: end-of-file-fixer
+        exclude: ".*\\.md$"
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=2048"]
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+
+  # ── Secret detection ─────────────────────────────────────────────────────
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: |
+          (?x)
+          \.env\.example$|
+          \.env\.example\..*$|
+          docs/.*\.md$|
+          README\.md$
+
+  # ── Python formatting ─────────────────────────────────────────────────────
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        language_version: python3.12
+        types: [python]
+
+  # ── Python import sorting ─────────────────────────────────────────────────
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        language_version: python3.12
+        args: ["--profile", "black", "--line-length", "120"]
+
+  # ── Python linting (ruff — faster than flake8, replaces most pylint checks)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.7
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+        types_or: [python, pyi]
+
+  # ── Terraform formatting ──────────────────────────────────────────────────
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.92.1
+    hooks:
+      - id: terraform_fmt
+        args: ["--args=-recursive"]

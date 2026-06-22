@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+# Cancel in-progress runs for the same branch on new pushes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Python: lint + type-check + test ─────────────────────────────────────
+  python-lint-test:
+    name: "Python — lint, typecheck, test"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install all workspace dependencies
+        run: uv sync --all-packages --all-groups
+
+      - name: Check formatting (black)
+        run: uv run black --check .
+
+      - name: Check import ordering (isort)
+        run: uv run isort --check-only .
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Type-check (mypy)
+        run: |
+          uv run mypy \
+            shared/src \
+            backend/src \
+            agents/src \
+            evaluation/src
+
+      - name: Run tests (pytest)
+        run: uv run pytest --tb=short -q
+
+  # ── Frontend: lint + build ────────────────────────────────────────────────
+  frontend-lint-build:
+    name: "Frontend — lint, build"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Format check (Prettier)
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+  # ── Terraform: format check + validate ───────────────────────────────────
+  terraform-validate:
+    name: "Terraform — fmt, validate"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.x"
+
+      - name: Terraform format check
+        working-directory: infra
+        # Gracefully handle the empty-infra state during Phase 0.
+        # Once .tf files exist this will enforce consistent formatting.
+        run: |
+          if find . -name "*.tf" | grep -q .; then
+            terraform fmt -check -recursive
+          else
+            echo "No .tf files found yet — skipping fmt check."
+          fi
+
+      - name: Terraform validate
+        working-directory: infra
+        run: |
+          if [ -f "envs/demo/main.tf" ]; then
+            cd envs/demo
+            terraform init -backend=false -input=false
+            terraform validate
+          else
+            echo "No Terraform entrypoint found yet — skipping validate."
+          fi
+
+  # ── Pre-commit: all hooks ────────────────────────────────────────────────
+  pre-commit:
+    name: "Pre-commit hooks"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install pre-commit
+        run: uv run pre-commit install-hooks
+
+      - name: Run all pre-commit hooks
+        run: uv run pre-commit run --all-files
+        env:
+          # Prevent detect-secrets from treating example values as real secrets.
+          DETECT_SECRETS_BASELINE: .secrets.baseline
