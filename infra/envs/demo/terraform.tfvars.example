@@ -1,0 +1,47 @@
+# Demo environment — copy to terraform.tfvars and fill in real values.
+# terraform.tfvars is git-ignored; this example is committed as documentation.
+
+# ── Identity ───────────────────────────────────────────────────────────────────
+project_name = "loan-origination"
+environment  = "demo"
+region       = "us-east-1"
+
+# ── Networking ─────────────────────────────────────────────────────────────────
+vpc_cidr                  = "10.0.0.0/16"
+public_subnet_cidrs       = ["10.0.0.0/24", "10.0.1.0/24"]
+private_app_subnet_cidrs  = ["10.0.10.0/24", "10.0.11.0/24"]
+private_data_subnet_cidrs = ["10.0.20.0/24", "10.0.21.0/24"]
+single_nat_gateway        = true
+
+# Restrict ALB ingress to your office/home IP for a demo (or leave as ["0.0.0.0/0"]).
+allowed_ingress_cidrs = ["0.0.0.0/0"]
+
+app_port          = 8000
+mock_service_port = 8080
+
+# ── TLS / Edge ─────────────────────────────────────────────────────────────────
+# Replace with a domain you own. Create a Route53 hosted zone first.
+domain_name    = "demo.your-domain.com"
+# Optional: set to your Route53 hosted zone ID for automatic DNS validation.
+# Leave empty ("") to create the ACM certificate and validate DNS records manually.
+route53_zone_id = ""
+
+# ── Auth / Cognito ─────────────────────────────────────────────────────────────
+cognito_callback_urls     = ["http://localhost:5173", "https://demo.your-domain.com"]
+cognito_logout_urls       = ["http://localhost:5173", "https://demo.your-domain.com"]
+cognito_mfa_configuration = "OPTIONAL"
+
+# ── Storage lifecycle ──────────────────────────────────────────────────────────
+incoming_retention_days   = 30
+extracted_retention_days  = 60
+access_log_retention_days = 90
+cors_allowed_origins      = ["http://localhost:5173", "https://demo.your-domain.com"]
+
+# ── Observability ──────────────────────────────────────────────────────────────
+log_retention_days            = 30
+auth_failure_alarm_threshold  = 10
+app_error_alarm_threshold     = 25
+
+# ── AI / Bedrock ───────────────────────────────────────────────────────────────
+# Ensure the chosen model is enabled in Bedrock Model Access for your account/region.
+bedrock_model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"

@@ -32,7 +32,7 @@ frontend/.vite/
 
 # ── Terraform ────────────────────────────────────────────────────────────
 .terraform/
-.terraform.lock.hcl
+# .terraform.lock.hcl is intentionally committed for reproducible provider pins
 *.tfstate
 *.tfstate.backup
 *.tfstate.d/

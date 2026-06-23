@@ -82,9 +82,9 @@ jobs:
       - name: Build
         run: npm run build
 
-  # ── Terraform: format check + validate ───────────────────────────────────
+  # ── Terraform: fmt + validate + tflint ───────────────────────────────────
   terraform-validate:
-    name: "Terraform — fmt, validate"
+    name: "Terraform — fmt, validate, tflint"
     runs-on: ubuntu-latest
 
     steps:
@@ -96,27 +96,49 @@ jobs:
         with:
           terraform_version: "1.9.x"
 
+      # Cache downloaded provider plugins to speed up init.
+      - name: Cache Terraform providers
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.terraform.d/plugin-cache
+            infra/envs/demo/.terraform
+          key: terraform-${{ runner.os }}-${{ hashFiles('infra/envs/demo/versions.tf') }}
+          restore-keys: terraform-${{ runner.os }}-
+
+      - name: Set Terraform plugin cache dir
+        run: |
+          mkdir -p ~/.terraform.d/plugin-cache
+          echo 'plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"' > ~/.terraformrc
+
+      # ── Formatting check ──────────────────────────────────────────────────
       - name: Terraform format check
         working-directory: infra
-        # Gracefully handle the empty-infra state during Phase 0.
-        # Once .tf files exist this will enforce consistent formatting.
-        run: |
-          if find . -name "*.tf" | grep -q .; then
-            terraform fmt -check -recursive
-          else
-            echo "No .tf files found yet — skipping fmt check."
-          fi
+        run: terraform fmt -check -recursive
 
+      # ── Init (no backend — CI does not have state bucket access) ──────────
+      - name: Terraform init (no backend)
+        working-directory: infra/envs/demo
+        run: terraform init -backend=false -input=false
+
+      # ── Validate ──────────────────────────────────────────────────────────
       - name: Terraform validate
+        working-directory: infra/envs/demo
+        run: terraform validate
+
+      # ── tflint ────────────────────────────────────────────────────────────
+      - name: Install tflint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: "v0.54.0"
+
+      - name: tflint — init (download AWS ruleset)
         working-directory: infra
-        run: |
-          if [ -f "envs/demo/main.tf" ]; then
-            cd envs/demo
-            terraform init -backend=false -input=false
-            terraform validate
-          else
-            echo "No Terraform entrypoint found yet — skipping validate."
-          fi
+        run: tflint --init
+
+      - name: tflint — recursive lint
+        working-directory: infra
+        run: tflint --recursive --config .tflint.hcl
 
   # ── Pre-commit: all hooks ────────────────────────────────────────────────
   pre-commit:
