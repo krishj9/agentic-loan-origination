@@ -1,23 +1,22 @@
 [project]
-name = "agents"
+name = "tools"
 version = "0.1.0"
-description = "LangGraph supervisor, specialist subgraphs, and AgentCore-registered tools."
+description = "Deterministic tool backends: LlamaParse wrapper, risk engine, compliance engine, artifact packager."
 requires-python = ">=3.12"
 dependencies = [
-    "langgraph>=0.2",
-    "langchain-aws>=0.2",
-    "langchain-core>=0.2",
-    "boto3>=1.34",
     "pydantic>=2.7",
     "httpx>=0.27",
+    "boto3>=1.34",
+    "pyyaml>=6.0",
+    "reportlab>=4.2",
     "shared",
-    "tools",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.2",
     "pytest-asyncio>=0.23",
+    "moto>=5.0",
 ]
 
 [build-system]
@@ -25,8 +24,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/agents"]
+packages = ["src/tools"]
 
 [tool.uv.sources]
 shared = { workspace = true }
-tools = { workspace = true }

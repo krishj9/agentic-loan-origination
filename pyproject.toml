@@ -2,7 +2,7 @@
 # All Python dependency management uses UV exclusively.
 
 [tool.uv.workspace]
-members = ["backend", "agents", "shared", "evaluation"]
+members = ["backend", "agents", "shared", "evaluation", "tools"]
 
 # ── Workspace-level dev dependencies ─────────────────────────────────────
 [dependency-groups]
@@ -63,11 +63,13 @@ testpaths = [
     "agents/tests",
     "shared/tests",
     "evaluation/tests",
+    "tools/tests",
 ]
 pythonpath = [
     "backend/src",
     "agents/src",
     "shared/src",
     "evaluation/src",
+    "tools/src",
 ]
 asyncio_mode = "auto"

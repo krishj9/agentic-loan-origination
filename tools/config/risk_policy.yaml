@@ -1,0 +1,68 @@
+# Risk policy bands — P4-T3 / design §7.4
+#
+# Source of truth for PRIME / NEAR_PRIME / SUBPRIME classification.
+# The evaluation harness reads this file directly for drift detection (P6-T6).
+# All monetary thresholds are USD annual income.
+# Utilization values are decimal fractions (0.0–1.0).
+
+version: "1.0"
+
+bands:
+  PRIME:
+    # Rule: annual_income > 80,000 AND debt_utilization < 0.30
+    income_min_exclusive: 80000.00
+    utilization_max_exclusive: 0.30
+    score_range:
+      min: 720
+      max: 800
+    label: "PRIME"
+    description: "Annual income > $80,000 and debt utilisation < 30%"
+
+  SUBPRIME:
+    # Rule: annual_income < 40,000 OR debt_utilization > 0.60
+    # Evaluated AFTER PRIME; takes precedence over NEAR_PRIME.
+    income_max_exclusive: 40000.00
+    utilization_min_exclusive: 0.60
+    score_range:
+      min: 500
+      max: 600
+    label: "SUBPRIME"
+    description: "Annual income < $40,000 or debt utilisation > 60%"
+
+  NEAR_PRIME:
+    # Rule: everything that is not PRIME and not SUBPRIME
+    score_range:
+      min: 620
+      max: 700
+    label: "NEAR_PRIME"
+    description: "Annual income $40,000–$80,000 or debt utilisation 30–60%"
+
+# Risk flags — emitted alongside the profile for explainability (design §7.7)
+flags:
+  HIGH_UTILIZATION:
+    threshold: 0.60
+    description: "Debt utilisation exceeds 60%"
+  MODERATE_UTILIZATION:
+    threshold_min: 0.30
+    threshold_max: 0.60
+    description: "Debt utilisation is between 30% and 60%"
+  LOW_INCOME:
+    threshold_max: 40000.00
+    description: "Annual income below $40,000"
+  NEAR_PRIME_INCOME:
+    threshold_min: 40000.00
+    threshold_max: 80000.00
+    description: "Annual income between $40,000 and $80,000"
+
+# Synthetic tradeline generation parameters (design §7.6)
+tradelines:
+  min_count: 1
+  max_count: 5
+  account_types:
+    - CREDIT_CARD
+    - AUTO_LOAN
+    - MORTGAGE
+  balance_base: 5000
+  balance_variance: 45000
+  utilization_base: 0.10
+  utilization_variance_pct: 60   # adds up to +60 percentage points

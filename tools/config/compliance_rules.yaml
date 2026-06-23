@@ -1,0 +1,56 @@
+# Compliance rules — P4-T5 / design §8 / requirements §5.4
+#
+# Externalized rule definitions for the deterministic compliance engine.
+# Rules are evaluated in `order` sequence; all rules run (no short-circuit)
+# so the full flag list is always populated for audit purposes.
+#
+# action_escalation maps the most-severe triggered flag to a recommended action.
+
+version: "1.0"
+
+rules:
+  MISSING_CRITICAL_FIELDS:
+    rule_id: "MISSING_CRITICAL_FIELDS"
+    description: >-
+      One or more critical numeric fields (annual_income, requested_loan_amount)
+      are zero or negative — possible data integrity issue or synthetic fraud indicator.
+    severity: "CRITICAL"
+    order: 1
+
+  REQUIRED_DOCUMENT_COMPLETENESS:
+    rule_id: "REQUIRED_DOCUMENT_COMPLETENESS"
+    description_template: "Missing required document types: {missing_types}."
+    description_pass: "All required documents are present."
+    required_document_types:
+      - "PAYSTUB"
+      - "BANK_STATEMENT"
+    severity: "CRITICAL"
+    order: 2
+
+  LOAN_TO_INCOME_RATIO:
+    rule_id: "LOAN_TO_INCOME_RATIO"
+    description_template: >-
+      Requested loan ({loan_amount}) is {ratio_pct} of annual income ({annual_income}).
+      Policy limit: {limit_pct}.
+    max_ratio: 0.40
+    severity: "HIGH"
+    order: 3
+
+  RISK_BAND_LOAN_CEILING:
+    rule_id: "RISK_BAND_LOAN_CEILING"
+    description_template: >-
+      Requested loan ({loan_amount}) exceeds the {risk_profile} ceiling of {ceiling}.
+    ceilings:
+      PRIME: 100000.00
+      NEAR_PRIME: 50000.00
+      SUBPRIME: 20000.00
+    severity: "HIGH"
+    order: 4
+
+# Recommended action derived from the most severe triggered flag
+action_escalation:
+  CRITICAL: "DECLINE"
+  HIGH: "DECLINE"
+  MEDIUM: "REFER"
+  LOW: "APPROVE"
+  NONE: "APPROVE"

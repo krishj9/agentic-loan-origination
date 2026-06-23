@@ -1,0 +1,701 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Consumer Loan Origination API",
+    "description": "Agentic loan origination system powered by LangGraph and Amazon Bedrock AgentCore.  Implements the API layer (Phase 2) of the implementation plan.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/applications": {
+      "post": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Create a new loan application",
+        "description": "Create a new loan application and return its ID.",
+        "operationId": "create_application_api_v1_applications_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/applications/{application_id}/documents": {
+      "post": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Get a presigned S3 URL to upload a document",
+        "description": "Issue a presigned S3 PUT URL scoped to the given document type.",
+        "operationId": "create_document_upload_url_api_v1_applications__application_id__documents_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Unique application identifier.",
+              "title": "Application Id"
+            },
+            "description": "Unique application identifier."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignedUploadResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Application not found"
+          },
+          "409": {
+            "description": "Application not in uploadable state"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{application_id}/submit": {
+      "post": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Submit the application to the agent runtime for processing",
+        "description": "Validate document completeness and start an AgentCore Runtime session.",
+        "operationId": "submit_application_api_v1_applications__application_id__submit_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Unique application identifier.",
+              "title": "Application Id"
+            },
+            "description": "Unique application identifier."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitApplicationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Application not found"
+          },
+          "409": {
+            "description": "Application already submitted"
+          },
+          "422": {
+            "description": "Required documents missing"
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{application_id}": {
+      "get": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Get the current status of a loan application",
+        "description": "Return the application's current status, document count, and session ID.",
+        "operationId": "get_application_status_api_v1_applications__application_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Unique application identifier.",
+              "title": "Application Id"
+            },
+            "description": "Unique application identifier."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Application not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{application_id}/decision": {
+      "get": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Retrieve the underwriting decision for a completed application",
+        "description": "Return the structured decision JSON written by the packaging subgraph.",
+        "operationId": "get_decision_api_v1_applications__application_id__decision_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Unique application identifier.",
+              "title": "Application Id"
+            },
+            "description": "Unique application identifier."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Decision not yet available or application not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "ops"
+        ],
+        "summary": "Liveness health check",
+        "description": "Return 200 OK when the process is alive.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApplicationResponse": {
+        "properties": {
+          "applicationId": {
+            "type": "string",
+            "title": "Applicationid",
+            "description": "Unique application identifier."
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApplicationStatus",
+            "description": "Current lifecycle status."
+          },
+          "applicantName": {
+            "type": "string",
+            "title": "Applicantname"
+          },
+          "annualIncome": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annualincome"
+          },
+          "requestedLoanAmount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Requestedloanamount"
+          },
+          "debtUtilization": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debtutilization"
+          },
+          "documentCount": {
+            "type": "integer",
+            "title": "Documentcount",
+            "default": 0
+          },
+          "runtimeSessionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runtimesessionid",
+            "description": "AgentCore Runtime session ID, populated after submission."
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicationId",
+          "status",
+          "applicantName",
+          "annualIncome",
+          "requestedLoanAmount",
+          "debtUtilization"
+        ],
+        "title": "ApplicationResponse",
+        "description": "Response for application resource endpoints (POST /applications, GET /applications/{id})."
+      },
+      "ApplicationStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "PROCESSING",
+          "COMPLETED",
+          "FAILED",
+          "MANUAL_REVIEW"
+        ],
+        "title": "ApplicationStatus",
+        "description": "Lifecycle state of a loan application."
+      },
+      "CreateApplicationRequest": {
+        "properties": {
+          "applicantName": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Applicantname",
+            "description": "Full legal name of the loan applicant."
+          },
+          "annualIncome": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Annualincome",
+            "description": "Annualised gross income (USD)."
+          },
+          "requestedLoanAmount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Requestedloanamount",
+            "description": "Amount requested (USD)."
+          },
+          "debtUtilization": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Debtutilization",
+            "description": "Aggregate debt utilisation ratio (0.0 \u2013 1.0)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicantName",
+          "annualIncome",
+          "requestedLoanAmount",
+          "debtUtilization"
+        ],
+        "title": "CreateApplicationRequest",
+        "description": "Request body for POST /applications.\n\nAll monetary values use Decimal to preserve precision through JSON\nserialisation and into the risk engine.",
+        "example": {
+          "annualIncome": "85000.00",
+          "applicantName": "Jane Smith",
+          "debtUtilization": "0.25",
+          "requestedLoanAmount": "20000.00"
+        }
+      },
+      "DecisionOutcome": {
+        "type": "string",
+        "enum": [
+          "APPROVE",
+          "REFER",
+          "DECLINE"
+        ],
+        "title": "DecisionOutcome",
+        "description": "Final underwriting decision outcome."
+      },
+      "DecisionResponse": {
+        "properties": {
+          "applicationId": {
+            "type": "string",
+            "title": "Applicationid"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/DecisionOutcome"
+          },
+          "riskProfile": {
+            "$ref": "#/components/schemas/RiskProfile"
+          },
+          "creditScore": {
+            "type": "integer",
+            "title": "Creditscore"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale"
+          },
+          "artifactJsonS3Key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifactjsons3Key"
+          },
+          "artifactPdfS3Key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifactpdfs3Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicationId",
+          "outcome",
+          "riskProfile",
+          "creditScore",
+          "rationale"
+        ],
+        "title": "DecisionResponse",
+        "description": "Response for GET /applications/{id}/decision.\n\nSurfaces the canonical Decision fields without nesting the full\nrisk-engine and compliance sub-objects (those are available in the\nraw S3 artifact for auditors).",
+        "example": {
+          "applicationId": "app_abc123",
+          "artifactJsonS3Key": "archive/app_abc123/decision.json",
+          "artifactPdfS3Key": "archive/app_abc123/decision.pdf",
+          "creditScore": 745,
+          "outcome": "APPROVE",
+          "rationale": "Income band HIGH, utilization band LOW. No compliance flags triggered.",
+          "riskProfile": "PRIME"
+        }
+      },
+      "DocumentType": {
+        "type": "string",
+        "enum": [
+          "PAYSTUB",
+          "BANK_STATEMENT",
+          "ID",
+          "OTHER"
+        ],
+        "title": "DocumentType",
+        "description": "Supported document types for upload and LlamaParse processing."
+      },
+      "DocumentUploadRequest": {
+        "properties": {
+          "documentType": {
+            "$ref": "#/components/schemas/DocumentType",
+            "description": "Document class determines the LlamaParse parse profile."
+          }
+        },
+        "type": "object",
+        "required": [
+          "documentType"
+        ],
+        "title": "DocumentUploadRequest",
+        "description": "Request body for POST /applications/{id}/documents.",
+        "example": {
+          "documentType": "PAYSTUB"
+        }
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PresignedUploadResponse": {
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "title": "Documentid",
+            "description": "Assigned document identifier."
+          },
+          "uploadUrl": {
+            "type": "string",
+            "title": "Uploadurl",
+            "description": "Presigned S3 PUT URL."
+          },
+          "s3Key": {
+            "type": "string",
+            "title": "S3Key",
+            "description": "S3 object key the file will be written to."
+          },
+          "contentType": {
+            "type": "string",
+            "title": "Contenttype",
+            "description": "Content-Type the client must set when uploading.",
+            "default": "application/pdf"
+          },
+          "expiresInSeconds": {
+            "type": "integer",
+            "title": "Expiresinseconds",
+            "description": "Seconds until the URL expires."
+          }
+        },
+        "type": "object",
+        "required": [
+          "documentId",
+          "uploadUrl",
+          "s3Key",
+          "expiresInSeconds"
+        ],
+        "title": "PresignedUploadResponse",
+        "description": "Presigned S3 PUT URL response (P2-T6).\n\nThe client must PUT the file bytes directly to `uploadUrl` using the\nContent-Type specified in `contentType`.  The URL expires after\n`expiresInSeconds` seconds."
+      },
+      "RiskProfile": {
+        "type": "string",
+        "enum": [
+          "PRIME",
+          "NEAR_PRIME",
+          "SUBPRIME"
+        ],
+        "title": "RiskProfile",
+        "description": "Risk classification bands produced by the mock risk engine."
+      },
+      "SubmitApplicationResponse": {
+        "properties": {
+          "applicationId": {
+            "type": "string",
+            "title": "Applicationid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApplicationStatus",
+            "description": "New status after submission (PROCESSING)."
+          },
+          "runtimeSessionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runtimesessionid",
+            "description": "AgentCore Runtime session ID for cross-log correlation."
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable status message."
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicationId",
+          "status",
+          "message"
+        ],
+        "title": "SubmitApplicationResponse",
+        "description": "Response for POST /applications/{id}/submit."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
