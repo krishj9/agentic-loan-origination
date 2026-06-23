@@ -71,3 +71,6 @@ Thumbs.db
 *.tmp
 *.bak
 # .secrets.baseline is intentionally committed so detect-secrets can diff against it
+docs/phase5-summary.md
+docs/Phase6_Part1_SUMMARY.md
+docs/PHASE6_PART2_SUMMARY.md

@@ -13,7 +13,7 @@ This plan delivers an enterprise-styled, agentic consumer loan origination syste
 ### 1.2 Owner Role Legend (single builder wearing hats)
 - **PLT** – Platform / IaC Engineer (Terraform, AWS, networking, IAM)
 - **BE** – Backend Engineer (FastAPI, schemas, S3, auth integration)
-- **AI** – AI / Agent Engineer (LangGraph, AgentCore, tools, Guardrails)
+- **AI** – AI Engineer (LangGraph, AgentCore, tools, Guardrails)
 - **FE** – Frontend Engineer (React, hooks, auth UX)
 - **QA** – Quality / Evaluation Engineer (tests, golden cases, drift)
 - **SEC** – Security / Release Engineer (least-privilege audit, hardening)
@@ -28,7 +28,7 @@ S = < 0.5 day · M = 0.5–2 days · L = > 2 days (split if it grows).
 | A2 | Amazon Bedrock AgentCore Runtime + Gateway are available in the chosen region and reachable via SDK/CLI; Terraform coverage may be partial and require wrapper automation. | Phase 1/3 AgentCore tasks fall back to scripted (boto3/CLI) provisioning. |
 | A3 | A Llama Cloud account + LlamaParse API key exist; usage stays within free/dev tier. | Doc-processing tasks need a local fallback parser stub. |
 | A4 | All data is synthetic; no real PII, no real bureau, no production traffic. | Compliance/security scope would expand materially. |
-| A5 | Python 3.12+, Node 20+, Terraform 1.7+, UV, and AWS CLI v2 are installed locally. | Phase 0 bootstrap must add install steps. |
+| A5 | Python 3.13+, Node 20+, Terraform 1.7+, UV, and AWS CLI v2 are installed locally. | Phase 0 bootstrap must add install steps. |
 | A6 | Single demo environment (no multi-env promotion) for v1; enterprise multi-env is backlog. | Adds workspace/env separation tasks later. |
 | A7 | Mock risk policy bands (PRIME/NEAR_PRIME/SUBPRIME) are product config, not real credit standards, and live in version-controlled config. | Golden cases and drift detection must be re-baselined. |
 

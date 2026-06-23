@@ -46,3 +46,15 @@ output "dashboard_name" {
   description = "Name of the CloudWatch dashboard."
   value       = aws_cloudwatch_dashboard.main.dashboard_name
 }
+
+# ── P6-T10 new alarm outputs ──────────────────────────────────────────────────
+
+output "drift_alarm_arn" {
+  description = "ARN of the drift events spike CloudWatch alarm."
+  value       = aws_cloudwatch_metric_alarm.drift_spike.arn
+}
+
+output "accuracy_alarm_arn" {
+  description = "ARN of the golden-case accuracy drop CloudWatch alarm."
+  value       = aws_cloudwatch_metric_alarm.accuracy_drop.arn
+}

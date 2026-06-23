@@ -25,3 +25,17 @@ variable "app_error_alarm_threshold" {
   description = "Application errors per 5-minute window that trigger the alarm."
   default     = 25
 }
+
+# ── P6-T10 additions ──────────────────────────────────────────────────────────
+
+variable "drift_alarm_threshold" {
+  type        = number
+  description = "Number of drift events per 1-hour window that trigger the drift alarm."
+  default     = 1
+}
+
+variable "accuracy_alarm_threshold_pct" {
+  type        = number
+  description = "Minimum acceptable golden-case accuracy percentage (0–100). Alarm fires when accuracy drops below this value."
+  default     = 90
+}
