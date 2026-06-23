@@ -114,3 +114,14 @@ output "dashboard_name" {
   description = "CloudWatch dashboard name."
   value       = module.observability.dashboard_name
 }
+
+# ── Guardrails ─────────────────────────────────────────────────────────────────
+output "bedrock_guardrail_id" {
+  description = "The ID of the Bedrock Guardrail — set as BEDROCK_GUARDRAIL_ID in .env files."
+  value       = module.guardrails.guardrail_id
+}
+
+output "bedrock_guardrail_version" {
+  description = "The version of the Bedrock Guardrail — set as BEDROCK_GUARDRAIL_VERSION in .env files."
+  value       = module.guardrails.guardrail_version
+}

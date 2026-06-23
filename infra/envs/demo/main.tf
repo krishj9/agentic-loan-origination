@@ -118,3 +118,11 @@ module "agentcore" {
   gateway_role_arn = module.iam.gateway_tool_role_arn
   bedrock_model_id = var.bedrock_model_id
 }
+
+# ── Bedrock Guardrails ─────────────────────────────────────────────────────────
+module "guardrails" {
+  source = "../../modules/guardrails"
+
+  project_name = var.project_name
+  environment  = var.environment
+}

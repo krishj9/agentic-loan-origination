@@ -102,6 +102,52 @@ cp frontend/.env.example frontend/.env
 
 Never commit `.env` files. See `docs/adr/0001-stack-choices.md` for secrets-management rationale.
 
+## Infrastructure Provisioning (AWS)
+
+To provision all the necessary AWS resources using Terraform:
+
+```bash
+# 1 — Navigate to the demo environment module
+cd infra/envs/demo
+
+# 2 — Initialize Terraform
+terraform init
+
+# 3 — Review the deployment plan
+terraform plan
+
+# 4 — Apply the configuration to create the resources
+terraform apply
+```
+
+After successful application, Terraform will output values such as `bedrock_guardrail_id`, `cognito_user_pool_id`, `app_log_group_name`, etc. Make sure to update your `.env` files with these outputs before starting the application!
+
+## Run on AWS (AgentCore Runtime Mode)
+
+To run the application pointing to your deployed AWS AgentCore runtime (instead of running the LangGraph supervisor locally in-process):
+
+1. **Populate Backend `.env`:** Open `backend/.env` and update the following variables using the Terraform outputs:
+   ```env
+   RUNTIME_MODE=aws
+   AGENTCORE_RUNTIME_ARN=arn:aws:bedrock:...
+   AGENTCORE_GATEWAY_ARN=arn:aws:bedrock:...
+   S3_BUCKET_NAME=loan-origination-documents-demo
+   ```
+2. **Populate Frontend `.env`:** Open `frontend/.env` (or `.env.local`) and configure the Cognito outputs:
+   ```env
+   VITE_COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
+   VITE_COGNITO_USER_POOL_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+   VITE_COGNITO_OAUTH_DOMAIN=your-cognito-domain.auth.us-east-1.amazoncognito.com
+   ```
+3. **Start the application:**
+   ```bash
+   # Terminal 1: Backend
+   cd backend && uv run uvicorn backend.main:app
+
+   # Terminal 2: Frontend
+   cd frontend && npm run dev
+   ```
+
 ## Key Design Decisions
 
 See [`docs/adr/0001-stack-choices.md`](docs/adr/0001-stack-choices.md) for the full Architecture Decision Record.

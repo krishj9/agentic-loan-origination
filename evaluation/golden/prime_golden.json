@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "scenarioId": "demo_prime",
+    "scenarioType": "END_TO_END",
+    "version": "1.0.0",
+    "seed": 42,
+    "description": "E2E APPROVE scenario for PRIME applicant: Carol Chen",
+    "createdAt": "2026-06-23 23:21:45.888212",
+    "expectedOutcomes": {
+      "decisionOutcome": "APPROVE",
+      "riskProfile": "PRIME",
+      "complianceAction": "APPROVE"
+    },
+    "dimensions": {
+      "primary_dimensions": [
+        "ACCURACY",
+        "COMPLETENESS",
+        "DETERMINISM"
+      ],
+      "secondary_dimensions": [
+        "EXPLAINABILITY",
+        "SCHEMA_CONFORMANCE"
+      ]
+    },
+    "tags": [
+      "end-to-end",
+      "golden-case",
+      "prime",
+      "approve"
+    ],
+    "requirementRefs": [
+      "REQ-5.1",
+      "REQ-5.3",
+      "REQ-5.4",
+      "DESIGN-5"
+    ]
+  },
+  "canonicalApplication": {
+    "applicationId": "app_fe8ba090",
+    "userId": "user_6088",
+    "applicantName": "Carol Chen",
+    "annualIncome": "86021.165787339836242608726024627685546875",
+    "requestedLoanAmount": "12297.22555136058144853450357913970947265625",
+    "debtUtilization": "0.240442521154994481857869459417997859418392181396484375",
+    "status": "PENDING",
+    "documentInventory": [],
+    "payStubData": null,
+    "bankStatementData": null,
+    "auditContext": null
+  },
+  "documentFixtures": [
+    {
+      "type": "PAYSTUB",
+      "path": "fixtures/prime/paystub_demo_prime.pdf"
+    },
+    {
+      "type": "BANK_STATEMENT",
+      "path": "fixtures/prime/statement_demo_prime.pdf"
+    }
+  ],
+  "expectedRiskProfile": "PRIME",
+  "expectedComplianceAction": "APPROVE",
+  "expectedDecisionOutcome": "APPROVE"
+}

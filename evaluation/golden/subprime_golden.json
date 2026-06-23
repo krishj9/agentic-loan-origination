@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "scenarioId": "demo_subprime",
+    "scenarioType": "END_TO_END",
+    "version": "1.0.0",
+    "seed": 42,
+    "description": "E2E DECLINE scenario for SUBPRIME applicant: Carol Chen",
+    "createdAt": "2026-06-23 23:21:45.888869",
+    "expectedOutcomes": {
+      "decisionOutcome": "DECLINE",
+      "riskProfile": "SUBPRIME",
+      "complianceAction": "DECLINE"
+    },
+    "dimensions": {
+      "primary_dimensions": [
+        "ACCURACY",
+        "COMPLETENESS",
+        "DETERMINISM"
+      ],
+      "secondary_dimensions": [
+        "EXPLAINABILITY",
+        "SCHEMA_CONFORMANCE"
+      ]
+    },
+    "tags": [
+      "end-to-end",
+      "golden-case",
+      "subprime",
+      "decline"
+    ],
+    "requirementRefs": [
+      "REQ-5.1",
+      "REQ-5.3",
+      "REQ-5.4",
+      "DESIGN-5"
+    ]
+  },
+  "canonicalApplication": {
+    "applicationId": "app_fe8ba090",
+    "userId": "user_3288",
+    "applicantName": "Carol Chen",
+    "annualIncome": "44522.0754124735904042609035968780517578125",
+    "requestedLoanAmount": "45874.53937753048376180231571197509765625",
+    "debtUtilization": "0.76566002363363827587505738847539760172367095947265625",
+    "status": "PENDING",
+    "documentInventory": [],
+    "payStubData": null,
+    "bankStatementData": null,
+    "auditContext": null
+  },
+  "documentFixtures": [
+    {
+      "type": "PAYSTUB",
+      "path": "fixtures/subprime/paystub_demo_subprime.pdf"
+    },
+    {
+      "type": "BANK_STATEMENT",
+      "path": "fixtures/subprime/statement_demo_subprime.pdf"
+    }
+  ],
+  "expectedRiskProfile": "SUBPRIME",
+  "expectedComplianceAction": "DECLINE",
+  "expectedDecisionOutcome": "DECLINE"
+}

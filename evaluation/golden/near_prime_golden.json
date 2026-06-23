@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "scenarioId": "demo_near_prime",
+    "scenarioType": "END_TO_END",
+    "version": "1.0.0",
+    "seed": 42,
+    "description": "E2E REFER scenario for NEAR_PRIME applicant: Carol Chen",
+    "createdAt": "2026-06-23 23:21:45.888683",
+    "expectedOutcomes": {
+      "decisionOutcome": "REFER",
+      "riskProfile": "NEAR_PRIME",
+      "complianceAction": "REFER"
+    },
+    "dimensions": {
+      "primary_dimensions": [
+        "ACCURACY",
+        "COMPLETENESS",
+        "DETERMINISM"
+      ],
+      "secondary_dimensions": [
+        "EXPLAINABILITY",
+        "SCHEMA_CONFORMANCE"
+      ]
+    },
+    "tags": [
+      "end-to-end",
+      "golden-case",
+      "near_prime",
+      "refer"
+    ],
+    "requirementRefs": [
+      "REQ-5.1",
+      "REQ-5.3",
+      "REQ-5.4",
+      "DESIGN-5"
+    ]
+  },
+  "canonicalApplication": {
+    "applicationId": "app_fe8ba090",
+    "userId": "user_8085",
+    "applicantName": "Carol Chen",
+    "annualIncome": "78064.026961225245031528174877166748046875",
+    "requestedLoanAmount": "31129.9207692859563394449651241302490234375",
+    "debtUtilization": "0.3893642050737298188067825321923010051250457763671875",
+    "status": "PENDING",
+    "documentInventory": [],
+    "payStubData": null,
+    "bankStatementData": null,
+    "auditContext": null
+  },
+  "documentFixtures": [
+    {
+      "type": "PAYSTUB",
+      "path": "fixtures/near_prime/paystub_demo_near_prime.pdf"
+    },
+    {
+      "type": "BANK_STATEMENT",
+      "path": "fixtures/near_prime/statement_demo_near_prime.pdf"
+    }
+  ],
+  "expectedRiskProfile": "NEAR_PRIME",
+  "expectedComplianceAction": "REFER",
+  "expectedDecisionOutcome": "REFER"
+}
