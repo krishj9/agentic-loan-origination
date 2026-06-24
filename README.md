@@ -73,54 +73,72 @@ graph TD
 
 ## Quick Start (Local Dev)
 
+### 1. Installation
+
+First, clone the repository and install all dependencies:
+
 ```bash
-# 1 — Clone and install all Python workspaces
+# Install Python dependencies across all workspaces
 uv sync --all-packages
-
-# 2 — Install and start the frontend
-cd frontend && npm install && npm run dev
-
-# 3 — Load environment variables (see .env.example files)
-source scripts/load_env.sh
-
-# 4 — Run the backend API (local mode, in-process LangGraph)
-cd backend && uv run uvicorn backend.main:app --reload
-
-# 5 — Run all tests
-uv run pytest
 ```
 
-## Environment Setup
+### 2. Infrastructure Provisioning (AWS)
 
-Copy and populate the example env files before running:
+Both local and cloud runs of this application depend on active AWS resources (Cognito for authentication, S3 for storage, etc.). You must provision these resources first:
 
 ```bash
+# Navigate to the demo environment module
+cd infra/envs/demo
+#run bootstrap first to create s3 bucket used to store state file
+
+# Initialize Terraform and apply configuration
+terraform init
+terraform apply
+```
+
+After a successful apply, Terraform will output values like `cognito_user_pool_id`, `cognito_user_pool_client_id`, `s3_bucket_name`, etc. Make sure to keep these handy.
+
+### 3. Environment Configuration
+
+Navigate back to the repository root. Copy the example environment files and update them with the outputs from your Terraform deployment:
+
+```bash
+# Copy example environment files
 cp backend/.env.example backend/.env
 cp agents/.env.example agents/.env
 cp frontend/.env.example frontend/.env
 ```
 
+Open `.env` in `backend/` and `frontend/` and configure them using the Terraform outputs:
+* For `backend/.env`, set `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID`, and `S3_BUCKET_NAME`.
+* For `frontend/.env`, set `VITE_COGNITO_USER_POOL_ID` and `VITE_COGNITO_USER_POOL_CLIENT_ID`.
+
 Never commit `.env` files. See `docs/adr/0001-stack-choices.md` for secrets-management rationale.
 
-## Infrastructure Provisioning (AWS)
+### 4. Run the Services
 
-To provision all the necessary AWS resources using Terraform:
+Since the backend API and frontend dev server are both long-running foreground processes, you will need to open two terminal windows:
 
+#### Terminal 1: Backend
 ```bash
-# 1 — Navigate to the demo environment module
-cd infra/envs/demo
+# Load environment variables
+source scripts/load_env.sh
 
-# 2 — Initialize Terraform
-terraform init
-
-# 3 — Review the deployment plan
-terraform plan
-
-# 4 — Apply the configuration to create the resources
-terraform apply
+# Run the backend API (local mode, in-process LangGraph)
+cd backend && uv run uvicorn backend.main:app --reload
 ```
 
-After successful application, Terraform will output values such as `bedrock_guardrail_id`, `cognito_user_pool_id`, `app_log_group_name`, etc. Make sure to update your `.env` files with these outputs before starting the application!
+#### Terminal 2: Frontend
+```bash
+# Navigate to frontend, install packages, and start dev server
+cd frontend && npm install && npm run dev
+```
+
+### 5. Run Tests (Optional)
+```bash
+# Run pytest at the repository root
+uv run pytest
+```
 
 ## Run on AWS (AgentCore Runtime Mode)
 
