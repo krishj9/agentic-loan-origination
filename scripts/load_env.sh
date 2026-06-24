@@ -18,7 +18,27 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Determine script directory reliably, handling both sourced and direct execution contexts
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+  # Fallback for shells where BASH_SOURCE is not available (zsh, sourced in certain contexts)
+  # Use PWD or current directory as best guess
+  SCRIPT_DIR="$(pwd)"
+  # Check if we're in the scripts directory
+  if [[ "$(basename "$SCRIPT_DIR")" != "scripts" ]]; then
+    # If we're not in scripts/, try to find it
+    if [[ -d "./scripts" ]]; then
+      SCRIPT_DIR="$(pwd)/scripts"
+    elif [[ -d "../scripts" ]]; then
+      SCRIPT_DIR="$(cd .. && pwd)/scripts"
+    else
+      echo "[load_env] ERROR: Could not determine scripts directory. Please run from repo root or scripts/ directory." >&2
+      return 1 2>/dev/null || exit 1
+    fi
+  fi
+fi
+
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 TARGET="${1:-backend}"
