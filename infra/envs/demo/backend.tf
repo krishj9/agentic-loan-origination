@@ -10,7 +10,7 @@ terraform {
     bucket         = "loan-origination-tf-state-demo"
     key            = "demo/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "loan-origination-tf-lock"
+    use_lockfile   = true
     encrypt        = true
   }
 }
