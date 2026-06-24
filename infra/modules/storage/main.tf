@@ -14,6 +14,7 @@ locals {
 
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+data "aws_elb_service_account" "main" {}
 
 # ── KMS customer-managed key ───────────────────────────────────────────────────
 resource "aws_kms_key" "documents" {
@@ -90,6 +91,74 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "access_logs" {
       sse_algorithm = "AES256"
     }
   }
+}
+
+# ALB log delivery sets bucket-owner-full-control on PutObject; ACLs must remain enabled.
+resource "aws_s3_bucket_ownership_controls" "access_logs" {
+  bucket = aws_s3_bucket.access_logs.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+
+  depends_on = [aws_s3_bucket_public_access_block.access_logs]
+}
+
+data "aws_iam_policy_document" "access_logs_bucket" {
+  statement {
+    sid    = "AllowELBLogDelivery"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_elb_service_account.main.arn]
+    }
+
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.access_logs.arn}/*"]
+  }
+
+  statement {
+    sid    = "AllowALBLogDeliveryWrite"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["logdelivery.elasticloadbalancing.amazonaws.com"]
+    }
+
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.access_logs.arn}/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
+  }
+
+  statement {
+    sid    = "AllowALBLogDeliveryAclCheck"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["logdelivery.elasticloadbalancing.amazonaws.com"]
+    }
+
+    actions   = ["s3:GetBucketAcl"]
+    resources = [aws_s3_bucket.access_logs.arn]
+  }
+}
+
+resource "aws_s3_bucket_policy" "access_logs" {
+  bucket = aws_s3_bucket.access_logs.id
+  policy = data.aws_iam_policy_document.access_logs_bucket.json
+
+  depends_on = [
+    aws_s3_bucket_public_access_block.access_logs,
+    aws_s3_bucket_ownership_controls.access_logs,
+  ]
 }
 
 # ── Main documents bucket ──────────────────────────────────────────────────────

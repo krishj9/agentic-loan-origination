@@ -31,7 +31,7 @@ resource "aws_bedrock_guardrail" "main" {
   content_policy_config {
     filters_config {
       input_strength  = "HIGH"
-      output_strength = "HIGH"
+      output_strength = "NONE"
       type            = "PROMPT_ATTACK"
     }
     filters_config {

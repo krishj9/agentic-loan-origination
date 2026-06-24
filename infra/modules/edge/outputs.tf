@@ -19,11 +19,11 @@ output "app_target_group_arn" {
 }
 
 output "https_listener_arn" {
-  description = "ARN of the HTTPS listener."
-  value       = aws_lb_listener.https.arn
+  description = "ARN of the HTTPS listener. Null when enable_ssl = false."
+  value       = var.enable_ssl ? aws_lb_listener.https[0].arn : null
 }
 
 output "certificate_arn" {
-  description = "ARN of the ACM certificate (after validation)."
-  value       = aws_acm_certificate_validation.main.certificate_arn
+  description = "ARN of the ACM certificate after validation. Null when enable_ssl = false."
+  value       = var.enable_ssl ? aws_acm_certificate_validation.main[0].certificate_arn : null
 }

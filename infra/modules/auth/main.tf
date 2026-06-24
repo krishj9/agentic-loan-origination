@@ -58,6 +58,15 @@ resource "aws_cognito_user_pool" "main" {
 
   mfa_configuration = var.mfa_configuration
 
+  # TOTP (software token) MFA is required when mfa_configuration is OPTIONAL or ON.
+  # Without at least one MFA method configured, Cognito rejects the request.
+  dynamic "software_token_mfa_configuration" {
+    for_each = var.mfa_configuration != "OFF" ? [1] : []
+    content {
+      enabled = true
+    }
+  }
+
   # Emit CloudWatch metrics for authentication events.
   # (auth failure logs are written by the application layer to the auth log group)
 

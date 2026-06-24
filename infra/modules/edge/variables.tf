@@ -23,9 +23,16 @@ variable "alb_sg_id" {
   description = "Security group ID to attach to the ALB."
 }
 
+variable "enable_ssl" {
+  type        = bool
+  description = "Enable HTTPS/TLS via an ACM certificate. When false the ALB serves plain HTTP on port 80 and no certificate is created."
+  default     = false
+}
+
 variable "domain_name" {
   type        = string
-  description = "FQDN for the ACM certificate and optional Route53 record (e.g. demo.example.com)."
+  description = "FQDN for the ACM certificate and optional Route53 record (e.g. demo.example.com). Required when enable_ssl = true."
+  default     = ""
 }
 
 variable "subject_alternative_names" {

@@ -8,6 +8,12 @@ variable "environment" {
   description = "Deployment environment."
 }
 
+variable "region" {
+  type        = string
+  description = "AWS region for the CloudWatch dashboard metric widgets."
+  default     = "us-east-1"
+}
+
 variable "log_retention_days" {
   type        = number
   description = "CloudWatch log group retention period in days."

@@ -241,6 +241,7 @@ resource "aws_cloudwatch_dashboard" "main" {
         height = 6
         properties = {
           title  = "Authentication Failures"
+          region = var.region
           period = 300
           stat   = "Sum"
           view   = "timeSeries"
@@ -260,6 +261,7 @@ resource "aws_cloudwatch_dashboard" "main" {
         height = 6
         properties = {
           title  = "Application Errors"
+          region = var.region
           period = 300
           stat   = "Sum"
           view   = "timeSeries"
@@ -279,6 +281,7 @@ resource "aws_cloudwatch_dashboard" "main" {
         height = 6
         properties = {
           title  = "Drift Detection Events"
+          region = var.region
           period = 3600
           stat   = "Sum"
           view   = "timeSeries"
@@ -299,6 +302,7 @@ resource "aws_cloudwatch_dashboard" "main" {
         height = 6
         properties = {
           title  = "Golden-Case Accuracy (%)"
+          region = var.region
           period = 3600
           stat   = "Average"
           view   = "timeSeries"
@@ -319,6 +323,7 @@ resource "aws_cloudwatch_dashboard" "main" {
         height = 6
         properties = {
           title  = "False Positives & False Negatives"
+          region = var.region
           period = 3600
           stat   = "Sum"
           view   = "timeSeries"
@@ -339,7 +344,7 @@ resource "aws_cloudwatch_dashboard" "main" {
         properties = {
           title  = "Recent Application Errors"
           query  = "SOURCE '${aws_cloudwatch_log_group.app.name}' | filter level = 'ERROR' | sort @timestamp desc | limit 20"
-          region = "us-east-1"
+          region = var.region
           view   = "table"
         }
       },

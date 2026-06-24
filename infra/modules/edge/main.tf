@@ -1,25 +1,27 @@
-# Edge module — Application Load Balancer, ACM TLS certificate, and listeners.
+# Edge module — Application Load Balancer, optional ACM TLS certificate, and listeners.
 #
-# TLS termination occurs at the ALB (design §3.2, requirements §4.2).
-# HTTP:80 is permanently redirected to HTTPS:443.
+# SSL mode (enable_ssl = true):
+#   • ACM certificate is created for domain_name with DNS validation.
+#   • HTTPS listener on port 443 forwards traffic to the application target group.
+#   • HTTP listener on port 80 issues a 301 redirect to HTTPS.
+#   • If route53_zone_id is provided, DNS CNAME records and an ALB alias A record
+#     are created automatically; otherwise validate DNS records manually.
 #
-# ACM certificate DNS validation:
-#   • If route53_zone_id is provided, DNS CNAME records are created automatically.
-#   • If empty, the certificate is requested but validation records must be added
-#     manually; the ALB listener will wait until the cert reaches ISSUED state.
-#
-# For a demo without a registered domain, set `domain_name` to a subdomain you
-# control and provide the Route53 zone ID, or manually validate via DNS/email.
+# Plain HTTP mode (enable_ssl = false, default):
+#   • No ACM certificate is created; domain_name is not required.
+#   • HTTP listener on port 80 forwards traffic to the application target group.
+#   • Access the application via the ALB DNS name output.
 
 locals {
   prefix = "${var.project_name}-${var.environment}"
 }
 
-# ── ACM certificate ────────────────────────────────────────────────────────────
+# ── ACM certificate (SSL only) ─────────────────────────────────────────────────
 resource "aws_acm_certificate" "main" {
-  domain_name       = var.domain_name
-  validation_method = "DNS"
+  count = var.enable_ssl ? 1 : 0
 
+  domain_name               = var.domain_name
+  validation_method         = "DNS"
   subject_alternative_names = var.subject_alternative_names
 
   lifecycle {
@@ -33,10 +35,10 @@ resource "aws_acm_certificate" "main" {
   }
 }
 
-# ── Route53 DNS validation records (optional) ──────────────────────────────────
+# ── Route53 DNS validation records (SSL + route53_zone_id only) ────────────────
 resource "aws_route53_record" "cert_validation" {
-  for_each = var.route53_zone_id != "" ? {
-    for dvo in aws_acm_certificate.main.domain_validation_options :
+  for_each = (var.enable_ssl && var.route53_zone_id != "") ? {
+    for dvo in aws_acm_certificate.main[0].domain_validation_options :
     dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
@@ -52,11 +54,13 @@ resource "aws_route53_record" "cert_validation" {
   zone_id         = var.route53_zone_id
 }
 
-# ── Certificate validation waiter ─────────────────────────────────────────────
+# ── Certificate validation waiter (SSL only) ───────────────────────────────────
 resource "aws_acm_certificate_validation" "main" {
-  certificate_arn = aws_acm_certificate.main.arn
+  count = var.enable_ssl ? 1 : 0
 
-  validation_record_fqdns = var.route53_zone_id != "" ? [
+  certificate_arn = aws_acm_certificate.main[0].arn
+
+  validation_record_fqdns = (var.enable_ssl && var.route53_zone_id != "") ? [
     for record in aws_route53_record.cert_validation : record.fqdn
   ] : []
 }
@@ -69,11 +73,16 @@ resource "aws_lb" "main" {
   security_groups    = [var.alb_sg_id]
   subnets            = var.public_subnet_ids
 
-  # Enable access logs for ALB request auditing.
-  access_logs {
-    bucket  = var.access_logs_bucket
-    prefix  = "${local.prefix}-alb"
-    enabled = var.access_logs_bucket != ""
+  # Omit the block entirely when no bucket is provided to avoid an AWS provider
+  # bug where planning with enabled=false and an empty bucket string produces
+  # an inconsistent final plan when the bucket becomes known during apply.
+  dynamic "access_logs" {
+    for_each = var.access_logs_bucket != "" ? [var.access_logs_bucket] : []
+    content {
+      bucket  = access_logs.value
+      prefix  = "${local.prefix}-alb"
+      enabled = true
+    }
   }
 
   # Drop invalid HTTP headers for security hardening.
@@ -109,15 +118,17 @@ resource "aws_lb_target_group" "app" {
   }
 }
 
-# ── HTTPS listener ─────────────────────────────────────────────────────────────
+# ── HTTPS listener (SSL only) ──────────────────────────────────────────────────
 resource "aws_lb_listener" "https" {
+  count = var.enable_ssl ? 1 : 0
+
   load_balancer_arn = aws_lb.main.arn
   port              = "443"
   protocol          = "HTTPS"
 
   # TLS 1.2+ only; TLS 1.3 preferred.
   ssl_policy      = "ELBSecurityPolicy-TLS13-1-2-2021-06"
-  certificate_arn = aws_acm_certificate_validation.main.certificate_arn
+  certificate_arn = aws_acm_certificate_validation.main[0].certificate_arn
 
   default_action {
     type             = "forward"
@@ -129,8 +140,10 @@ resource "aws_lb_listener" "https" {
   }
 }
 
-# ── HTTP → HTTPS redirect listener ────────────────────────────────────────────
+# ── HTTP → HTTPS redirect listener (SSL only) ──────────────────────────────────
 resource "aws_lb_listener" "http_redirect" {
+  count = var.enable_ssl ? 1 : 0
+
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
   protocol          = "HTTP"
@@ -150,9 +163,27 @@ resource "aws_lb_listener" "http_redirect" {
   }
 }
 
-# ── Optional Route53 A record pointing the domain at the ALB ──────────────────
+# ── HTTP forward listener (plain HTTP mode only) ───────────────────────────────
+resource "aws_lb_listener" "http" {
+  count = var.enable_ssl ? 0 : 1
+
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app.arn
+  }
+
+  tags = {
+    Name = "${local.prefix}-http-listener"
+  }
+}
+
+# ── Optional Route53 A record pointing the domain at the ALB (SSL only) ────────
 resource "aws_route53_record" "alb" {
-  count = var.route53_zone_id != "" ? 1 : 0
+  count = (var.enable_ssl && var.route53_zone_id != "") ? 1 : 0
 
   zone_id = var.route53_zone_id
   name    = var.domain_name

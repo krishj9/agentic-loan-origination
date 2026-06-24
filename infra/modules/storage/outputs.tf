@@ -26,4 +26,6 @@ output "kms_key_alias_arn" {
 output "access_logs_bucket_id" {
   description = "Name of the S3 access-logging bucket."
   value       = aws_s3_bucket.access_logs.id
+
+  depends_on = [aws_s3_bucket_policy.access_logs]
 }
