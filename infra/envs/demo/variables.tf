@@ -67,9 +67,16 @@ variable "mock_service_port" {
 }
 
 # ── TLS / Edge ─────────────────────────────────────────────────────────────────
+variable "enable_ssl" {
+  type        = bool
+  description = "Enable HTTPS/TLS via an ACM certificate. When false the ALB serves plain HTTP and no certificate is created."
+  default     = false
+}
+
 variable "domain_name" {
   type        = string
-  description = "FQDN for the ACM certificate and ALB (e.g. demo.yourdomain.com)."
+  description = "FQDN for the ACM certificate and ALB (e.g. demo.yourdomain.com). Required when enable_ssl = true."
+  default     = ""
 }
 
 variable "route53_zone_id" {
@@ -119,7 +126,7 @@ variable "cognito_logout_urls" {
 variable "cognito_mfa_configuration" {
   type        = string
   description = "MFA policy for the Cognito user pool: OFF, OPTIONAL, or ON."
-  default     = "OPTIONAL"
+  default     = "OFF"
 }
 
 # ── Observability ──────────────────────────────────────────────────────────────

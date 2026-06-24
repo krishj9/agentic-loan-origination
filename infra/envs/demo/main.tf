@@ -51,6 +51,7 @@ module "observability" {
 
   project_name                 = var.project_name
   environment                  = var.environment
+  region                       = var.region
   log_retention_days           = var.log_retention_days
   auth_failure_alarm_threshold = var.auth_failure_alarm_threshold
   app_error_alarm_threshold    = var.app_error_alarm_threshold
@@ -90,6 +91,7 @@ module "edge" {
   vpc_id             = module.network.vpc_id
   public_subnet_ids  = module.network.public_subnet_ids
   alb_sg_id          = module.security_groups.alb_sg_id
+  enable_ssl         = var.enable_ssl
   domain_name        = var.domain_name
   route53_zone_id    = var.route53_zone_id
   app_port           = var.app_port
